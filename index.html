@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>资金账本原型</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="phone-shell" data-active-screen="home">
+      <section class="screen active" data-screen="home">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">未来 30 天</p>
+            <h1>资金安全舱</h1>
+          </div>
+          <button class="icon-button" type="button" aria-label="通知">!</button>
+        </header>
+
+        <section class="balance-panel">
+          <div>
+            <p class="panel-label">可用现金</p>
+            <strong id="availableCash">¥0</strong>
+          </div>
+          <span class="risk-pill" id="homeRisk">计算中</span>
+        </section>
+
+        <section class="forecast-band">
+          <div class="forecast-summary">
+            <span>未来最低余额</span>
+            <strong id="lowestBalance">¥0</strong>
+          </div>
+          <div class="mini-chart" id="forecastBars" aria-label="未来资金曲线"></div>
+        </section>
+
+        <section class="content-block">
+          <div class="section-title">
+            <h2>近期预警</h2>
+            <span id="alertCount">0 条</span>
+          </div>
+          <div id="alertList"></div>
+        </section>
+
+        <section class="content-block">
+          <div class="section-title">
+            <h2>今日流水</h2>
+            <span id="todayTotal">¥0</span>
+          </div>
+          <div id="transactionList" class="transaction-list"></div>
+        </section>
+
+        <button class="home-fab" type="button" data-open-entry="expense" aria-label="新增记账">+</button>
+      </section>
+
+      <section class="screen entry-screen" data-screen="entry">
+        <header class="entry-header">
+          <button class="entry-back" type="button" data-nav="home" aria-label="返回">‹</button>
+          <h1>日常账本</h1>
+          <button class="entry-setting" type="button" data-nav="profile">设置</button>
+        </header>
+
+        <section class="entry-body">
+          <p class="entry-label">记账类型</p>
+          <div class="segmented entry-type-tabs" role="tablist" aria-label="记账类型">
+            <button class="active" type="button" data-entry-type="expense">支出</button>
+            <button type="button" data-entry-type="income">收入</button>
+            <button type="button" data-entry-type="transfer">转账</button>
+          </div>
+
+          <label class="entry-amount">
+            <span>金额</span>
+            <input id="amountInput" type="number" inputmode="decimal" placeholder="0.00" />
+          </label>
+
+          <section class="entry-section">
+            <h2>分类</h2>
+            <div class="chip-grid entry-category-grid" data-chip-group="category"></div>
+          </section>
+
+          <div class="category-sheet" id="categorySheet" hidden>
+            <button class="category-sheet-backdrop" type="button" data-category-close aria-label="关闭分类选择"></button>
+            <section class="category-dialog" aria-label="分类选择">
+              <header>
+                <h3 id="categorySheetTitle">分类</h3>
+                <button type="button" data-open-add-category>添加子类</button>
+              </header>
+              <div class="category-choice-list" id="categoryChoiceList"></div>
+            </section>
+
+            <section class="category-add-dialog" id="categoryAddDialog" aria-label="添加子类" hidden>
+              <h3>添加子类</h3>
+              <label>
+                <input id="newCategoryChildInput" type="text" />
+                <button type="button" aria-label="智能匹配表情符号">⌾</button>
+              </label>
+              <p>点击右侧图标，可为分类智能匹配表情字符。</p>
+              <button type="button" id="saveCategoryChild">完成</button>
+            </section>
+          </div>
+
+          <section class="entry-list">
+            <label>
+              <span>账户</span>
+              <select id="accountInput"></select>
+            </label>
+            <label>
+              <span>备注</span>
+              <input id="noteInput" type="text" placeholder="点击添加备注" />
+            </label>
+          </section>
+
+          <section class="entry-detail-panel">
+            <h2>细分标注</h2>
+            <div class="detail-pills">
+              <button class="detail-trigger selected" type="button" id="entryDatePill" data-detail-toggle="date">今天</button>
+              <button class="detail-trigger selected" type="button" id="entryTimePill" data-detail-toggle="time">--:--</button>
+              <button class="detail-trigger" type="button" id="projectTrigger" data-detail-toggle="project">项目</button>
+              <button class="detail-trigger" type="button" id="motivationTrigger" data-detail-toggle="motivation">消费动机</button>
+            </div>
+
+            <div class="detail-dropdown" data-detail-panel="date" hidden>
+              <div class="calendar-picker" id="entryCalendar">
+                <div class="calendar-head">
+                  <button type="button" id="calendarMonthLabel">2026年06月</button>
+                  <div>
+                    <button type="button" data-calendar-nav="-1" aria-label="上个月">‹</button>
+                    <button type="button" data-calendar-nav="1" aria-label="下个月">›</button>
+                  </div>
+                </div>
+                <div class="calendar-weekdays">
+                  <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+                <div class="calendar-actions">
+                  <button type="button" id="saveDateButton">保存</button>
+                </div>
+              </div>
+            </div>
+            <div class="detail-dropdown" data-detail-panel="time" hidden>
+              <div class="time-picker" id="entryTimePicker" aria-label="选择时间">
+                <div class="time-column">
+                  <span>时</span>
+                  <div class="time-wheel" id="hourWheel"></div>
+                </div>
+                <div class="time-column">
+                  <span>分</span>
+                  <div class="time-wheel" id="minuteWheel"></div>
+                </div>
+                <div class="calendar-actions time-actions">
+                  <button type="button" id="saveTimeButton">保存</button>
+                </div>
+              </div>
+            </div>
+            <div class="detail-dropdown" data-detail-panel="project" hidden>
+              <div class="detail-option-popover">
+                <div class="detail-chip-grid" data-chip-group="project"></div>
+              </div>
+            </div>
+            <div class="detail-dropdown" data-detail-panel="motivation" hidden>
+              <div class="detail-option-popover">
+                <div class="detail-chip-grid" data-chip-group="motivation"></div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <button class="primary-action" type="button" id="saveTransaction">保存记录</button>
+      </section>
+
+      <section class="screen" data-screen="forecast">
+        <header class="topbar compact">
+          <h1>资金预测</h1>
+          <button class="icon-button ghost" type="button" aria-label="筛选">≡</button>
+        </header>
+
+        <section class="scenario-panel">
+          <p class="eyebrow">决策模拟</p>
+          <h2 id="scenarioTitle">如果本月提前还贷</h2>
+          <div class="scenario-grid">
+            <div>
+              <span>当前现金减少</span>
+              <strong id="scenarioCashOut">¥0</strong>
+            </div>
+            <div>
+              <span>最低余额</span>
+              <strong id="scenarioLowest">¥0</strong>
+            </div>
+            <div>
+              <span>预计节省利息</span>
+              <strong id="scenarioSaved">¥0</strong>
+            </div>
+            <div>
+              <span>风险等级</span>
+              <strong id="scenarioRisk">低</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="timeline" id="timelineList"></section>
+      </section>
+
+      <section class="screen" data-screen="debt">
+        <header class="topbar compact">
+          <button class="icon-button ghost" type="button" data-nav="home" aria-label="返回">‹</button>
+          <h1>提前还贷</h1>
+          <button class="icon-button ghost" type="button" aria-label="说明">?</button>
+        </header>
+
+        <section class="loan-card">
+          <p class="eyebrow" id="debtType">房贷 · 等额本息</p>
+          <h2 id="debtName">房产 1 按揭贷款</h2>
+          <div class="loan-stats">
+            <div>
+              <span>剩余本金</span>
+              <strong id="debtPrincipal">¥0</strong>
+            </div>
+            <div>
+              <span>月供</span>
+              <strong id="debtMonthly">¥0</strong>
+            </div>
+            <div>
+              <span>剩余期数</span>
+              <strong id="debtTerms">0</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-block debt-form">
+          <label>
+            <span>提前还款金额</span>
+            <input id="prepayAmount" type="number" inputmode="decimal" value="50000" />
+          </label>
+          <label>
+            <span>策略</span>
+            <select id="prepayStrategy">
+              <option value="term">月供不变，缩短年限</option>
+              <option value="payment">期限不变，降低月供</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="result-panel">
+          <div>
+              <span>本月资金流出</span>
+            <strong id="cashOut">¥0</strong>
+          </div>
+          <div>
+            <span>预计节省利息</span>
+            <strong id="interestSaved">¥0</strong>
+          </div>
+          <div>
+            <span>未来最低余额</span>
+            <strong id="futureLowest">¥0</strong>
+          </div>
+          <div>
+            <span>建议</span>
+            <strong id="debtAdvice">计算中</strong>
+          </div>
+        </section>
+
+        <button class="primary-action" type="button" id="applyDebtPlan">记入账本</button>
+      </section>
+
+      <section class="screen" data-screen="analysis">
+        <header class="topbar compact">
+          <h1>分析</h1>
+          <button class="icon-button ghost" type="button" aria-label="导出">⇩</button>
+        </header>
+
+        <section class="content-block">
+          <div class="section-title">
+            <h2>按消费动机</h2>
+            <span>本月</span>
+          </div>
+          <div class="motivation-bars" id="motivationBars"></div>
+        </section>
+
+        <section class="content-block">
+          <div class="section-title">
+            <h2>按项目</h2>
+            <span>净资金变动</span>
+          </div>
+          <div id="projectAnalysisList"></div>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="ledger">
+        <header class="topbar compact">
+          <h1>全部账目</h1>
+          <button class="icon-button ghost" type="button" aria-label="搜索">⌕</button>
+        </header>
+
+        <section class="ledger-toolbar">
+          <div class="segmented ledger-tabs" role="tablist" aria-label="账目筛选">
+            <button class="active" type="button" data-ledger-filter="all">全部</button>
+            <button type="button" data-ledger-filter="income">收入</button>
+            <button type="button" data-ledger-filter="expense">支出</button>
+          </div>
+          <div class="ledger-summary">
+            <span id="ledgerCount">0 笔</span>
+            <strong id="ledgerNet">¥0</strong>
+          </div>
+        </section>
+
+        <section class="ledger-list" id="ledgerList"></section>
+      </section>
+
+      <section class="screen profile-screen" data-screen="profile">
+        <header class="profile-hero">
+          <div class="profile-topline">
+            <h1>我的</h1>
+            <div class="profile-actions">
+              <button class="icon-button ghost" type="button" aria-label="消息">≡</button>
+              <button class="icon-button ghost" type="button" aria-label="设置">⚙</button>
+            </div>
+          </div>
+          <section class="profile-card">
+            <div class="avatar">现</div>
+            <div>
+              <h2>账本管理员</h2>
+              <p>ID: 3377135039</p>
+            </div>
+            <span class="risk-pill" id="syncState">同步中</span>
+          </section>
+        </header>
+
+        <section class="profile-stats">
+          <div>
+            <strong id="profileDays">0</strong>
+            <span>记账天数</span>
+          </div>
+          <div>
+            <strong id="profileTransactionCount">0</strong>
+            <span>交易笔数</span>
+          </div>
+          <div>
+            <strong id="profileNetWorth">¥0</strong>
+            <span>净资产</span>
+          </div>
+        </section>
+
+        <section class="profile-card plain">
+          <div>
+            <h2>分类与项目</h2>
+            <p>维护记账时可选择的二级选项</p>
+          </div>
+          <span class="profile-card-badge">3 项</span>
+        </section>
+
+        <section class="settings-grid" aria-label="分类项目维护入口">
+          <button type="button" data-manage-type="category">
+            <span class="setting-icon blocks"></span>
+            <strong>分类</strong>
+            <small id="categoryCount">0 个选项</small>
+          </button>
+          <button type="button" data-manage-type="project">
+            <span class="setting-icon folder"></span>
+            <strong>项目</strong>
+            <small id="projectCount">0 个选项</small>
+          </button>
+          <button type="button" data-manage-type="motivation">
+            <span class="setting-icon note"></span>
+            <strong>消费动机</strong>
+            <small id="motivationCount">0 个选项</small>
+          </button>
+        </section>
+
+        <section class="settings-list">
+          <button type="button">
+            <span>自动</span>
+            <small>自动记账 ›</small>
+          </button>
+          <button type="button">
+            <span>导入导出</span>
+            <small>CSV / Excel ›</small>
+          </button>
+          <button type="button">
+            <span>备份</span>
+            <small>云端同步 ›</small>
+          </button>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="manage">
+        <header class="topbar compact">
+          <button class="icon-button ghost" type="button" data-nav="profile" aria-label="返回">‹</button>
+          <div>
+            <p class="eyebrow">二级选项</p>
+            <h1 id="manageTitle">分类</h1>
+          </div>
+          <button class="icon-button ghost" type="button" aria-label="完成" data-nav="profile">✓</button>
+        </header>
+
+        <section class="content-block manage-summary">
+          <h2 id="manageSummaryTitle">维护分类</h2>
+          <p id="manageSummaryText">这些选项会出现在记账页的分类选择区。</p>
+        </section>
+
+        <section class="option-editor">
+          <div id="optionList" class="option-list"></div>
+          <div class="add-option-row">
+            <input id="newOptionInput" type="text" placeholder="新增一个选项" />
+            <button type="button" id="addOptionButton">添加</button>
+          </div>
+        </section>
+      </section>
+
+      <nav class="bottom-nav" aria-label="主导航">
+        <button class="active" type="button" data-nav="home">首页</button>
+        <button type="button" data-nav="ledger">账目</button>
+        <button type="button" data-nav="forecast">预测</button>
+        <button type="button" data-nav="analysis">分析</button>
+        <button type="button" data-nav="profile">我的</button>
+      </nav>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js?v=github-sync-1"></script>
+  </body>
+</html>
